@@ -1,0 +1,19 @@
+crawl4ai_project/
+├── main.py
+├── requirements.txt
+├── .env
+├── .gitignore
+├── scraper/
+│   ├── __init__.py
+│   └── crawler.py
+├── models/
+│   ├── __init__.py
+│   └── llm_handler.py
+├── utils/
+│   ├── __init__.py
+│   ├── url_validator.py
+│   └── error_handler.py
+└── tests/
+    ├── __init__.py
+    ├── test_crawler.py
+    └── test_llm_handler.py 
