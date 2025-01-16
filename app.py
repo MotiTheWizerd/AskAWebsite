@@ -3,6 +3,7 @@ from typing import Dict, List
 import json
 import logging
 from background_scraper import start_background_scraping
+from rag.rag_engine import RAGEngine
 
 # Configure logging
 logging.basicConfig(
@@ -86,8 +87,25 @@ def handle_input():
     """Handle the input when text changes (enter is pressed)"""
     current_input = st.session_state.user_input
     if current_input and current_input != st.session_state.previous_input:
-        # Add message to chat
+        # Add user message to chat
         st.session_state.messages.append({"role": "user", "content": current_input})
+        
+        try:
+            # Query using RAGEngine
+            with st.spinner("Thinking..."):
+                rag_engine = RAGEngine()
+                response = rag_engine.query(current_input)
+            
+            # Add AI response to chat
+            st.session_state.messages.append({"role": "assistant", "content": response})
+            
+        except Exception as e:
+            logger.error(f"Error processing query: {str(e)}")
+            st.session_state.messages.append({
+                "role": "assistant", 
+                "content": "Sorry, I couldn't process your question. Please try again."
+            })
+        
         # Store the current input as previous
         st.session_state.previous_input = current_input
         # Clear the input
@@ -116,14 +134,22 @@ st.markdown("""
         margin-bottom: 2rem;
     }
     .chat-message {
-        padding: 1rem;
+        padding: 1.5rem;
         border-radius: 0.5rem;
         margin-bottom: 1rem;
         max-width: 80%;
         color: #1a1a1a;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 10px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    .chat-message-content {
+        flex: 1;
+        min-width: 0;
+        line-height: 1.5;
     }
     .user-message {
         background-color: #e6f3ff;
@@ -138,6 +164,7 @@ st.markdown("""
     .user-icon {
         font-size: 1.2rem;
         color: #2c3e50;
+        flex-shrink: 0;
     }
     </style>
     
@@ -165,9 +192,9 @@ check_scraping_status()
 for message in st.session_state.messages:
     with st.container():
         if message["role"] == "user":
-            st.markdown(f'<div class="chat-message user-message"><i class="fas fa-user user-icon"></i>{message["content"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="chat-message user-message"><i class="fas fa-user user-icon"></i><div class="chat-message-content">{message["content"]}</div></div>', unsafe_allow_html=True)
         else:
-            st.markdown(f'<div class="chat-message system-message">{message["content"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="chat-message system-message"><div class="chat-message-content">{message["content"]}</div></div>', unsafe_allow_html=True)
 
 # Chat input
 with st.container():
