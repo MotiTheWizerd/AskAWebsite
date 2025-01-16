@@ -4,6 +4,7 @@ from typing import List, Dict, Any
 import xml.etree.ElementTree as ET
 import aiohttp
 from urllib.parse import urlparse
+from rag.rag_engine import RAGEngine
 
 async def extract_urls_from_sitemap(
     sitemap_url: str,
@@ -162,3 +163,36 @@ async def crawl_sitemap(sitemap_url: str) -> List[Dict[str, Any]]:
                 })
                 
     return results 
+
+async def start_scraping_website(url: str) -> bool:
+    """
+    Start scraping a website and populate the RAG engine with the content.
+    
+    Args:
+        url: The URL of the website to scrape (should be a sitemap URL)
+        
+    Returns:
+        bool: True if scraping and population was successful, False otherwise
+    """
+    try:
+        # Initialize RAG engine
+        rag_engine = RAGEngine()
+        
+        # Scrape content
+        print(f"Starting to scrape website: {url}")
+        scraped_results = await crawl_sitemap(url)
+        
+        if not scraped_results:
+            print("No content was scraped from the website")
+            return False
+            
+        # Populate database with scraped content
+        print("Populating RAG engine with scraped content...")
+        rag_engine.populate_from_scraped_results(scraped_results, clear_db=True)
+        
+        print(f"Successfully populated database with {rag_engine.vector_store.count_documents()} documents")
+        return True
+        
+    except Exception as e:
+        print(f"Error during scraping process: {str(e)}")
+        return False 
